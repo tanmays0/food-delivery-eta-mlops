@@ -1,5 +1,3 @@
-"""FastAPI real-time ETA prediction service + demo UI + Prometheus metrics."""
-
 from __future__ import annotations
 
 import json
@@ -117,7 +115,6 @@ def health() -> dict[str, Any]:
 
 @app.get("/stats")
 def stats() -> dict[str, Any]:
-    """JSON stats for the demo UI (not Prometheus)."""
     train_metrics = {}
     if METRICS_PATH.exists():
         train_metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
@@ -132,7 +129,6 @@ def stats() -> dict[str, Any]:
 
 @app.get("/metrics")
 def prometheus_metrics() -> Response:
-    """Prometheus scrape endpoint."""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

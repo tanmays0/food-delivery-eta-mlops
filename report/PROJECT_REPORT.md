@@ -437,7 +437,6 @@ models = {
         n_jobs=-1,
     ),
 }
-# Fit each model, compute MAE/RMSE/R², select lowest MAE as production.
 ```
 
 ### 17.3 Real-time inference (`src/serve.py`)
@@ -446,8 +445,6 @@ models = {
 @app.post("/predict", response_model=ETAResponse)
 def predict(payload: ETARequest) -> ETAResponse:
     started = time.perf_counter()
-    # Load production XGBoost; on failure use heuristic fallback
-    # Observe Prometheus histograms/counters
     ...
 ```
 

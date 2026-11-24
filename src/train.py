@@ -1,5 +1,3 @@
-"""Train baseline and production ETA models; write metrics and artifacts."""
-
 from __future__ import annotations
 
 import json
