@@ -1,0 +1,69 @@
+%% Food Delivery ETA Predictor — ML System Architecture
+%% P2 Academic Submission | AWS Microservices Design
+
+flowchart TB
+  subgraph clients ["1. Client Applications"]
+    CustApp["Customer App"]
+    RestApp["Restaurant App"]
+    RiderApp["Delivery Partner App"]
+  end
+
+  APIGW["2. API Gateway<br/>(AWS API Gateway)"]
+
+  subgraph eks ["3. Backend Microservices — Amazon EKS / Docker"]
+    OMS["Order Management<br/>Service"]
+    LTS["Location Tracking<br/>Service"]
+    FES["Feature Engineering<br/>Service"]
+    ETA["ETA Prediction<br/>Service (FastAPI + XGBoost)"]
+  end
+
+  Kafka["4. Event Streaming<br/>Apache Kafka / Amazon MSK<br/>Topics: orders, gps, traffic, eta_updates"]
+
+  subgraph data ["5. Data Storage and Warehouse"]
+    PG[("PostgreSQL<br/>AWS RDS<br/>OLTP")]
+    S3["S3 Data Lake<br/>Bronze / Silver / Gold"]
+    RS[("Amazon Redshift<br/>Analytics Warehouse")]
+    FS[("Feature Store<br/>Redis Online + Offline Tables")]
+  end
+
+  subgraph ml ["6. ML Training and Registry"]
+    Train["Training Pipeline<br/>Preprocess → Train → Evaluate"]
+    MLflow["MLflow<br/>Experiment Tracking + Model Registry"]
+  end
+
+  Mon["7. Monitoring and Logging<br/>Prometheus + Grafana + CloudWatch"]
+
+  CustApp --> APIGW
+  RestApp --> APIGW
+  RiderApp --> APIGW
+
+  APIGW --> OMS
+  APIGW --> LTS
+  APIGW --> ETA
+
+  OMS --> PG
+  OMS --> Kafka
+  LTS --> Kafka
+
+  Kafka --> FES
+  Kafka --> S3
+
+  FES --> FS
+  FES --> S3
+
+  S3 --> RS
+  PG -.->|"CDC / snapshots"| S3
+
+  ETA --> FS
+  ETA --> MLflow
+
+  Train --> RS
+  Train --> FS
+  Train --> MLflow
+  MLflow -->|"deploy model artifact"| ETA
+
+  OMS --> Mon
+  LTS --> Mon
+  FES --> Mon
+  ETA --> Mon
+  Train --> Mon

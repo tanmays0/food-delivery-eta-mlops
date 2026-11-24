@@ -1,0 +1,34 @@
+{
+  "n_train": 6400,
+  "n_test": 1600,
+  "feature_columns": [
+    "distance_km",
+    "prep_time_p50_min",
+    "courier_load",
+    "zone_order_rate",
+    "hour_of_day",
+    "day_of_week",
+    "is_rain",
+    "traffic_index",
+    "time_since_accept_min"
+  ],
+  "models": {
+    "linear_regression": {
+      "mae_min": 3.071085519246119,
+      "rmse_min": 3.9268559313940155,
+      "r2": 0.9601530291707274
+    },
+    "random_forest": {
+      "mae_min": 2.42714388251428,
+      "rmse_min": 3.126906801806265,
+      "r2": 0.9747340722478455
+    },
+    "xgboost": {
+      "mae_min": 2.095519641411661,
+      "rmse_min": 2.6663207073464865,
+      "r2": 0.981629112119337
+    }
+  },
+  "selected_production_model": "xgboost",
+  "note": "Metrics are from this synthetic demo run (measured), not the architecture design targets."
+}

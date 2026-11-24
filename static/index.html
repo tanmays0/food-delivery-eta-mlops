@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Food Delivery ETA Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1210;
+      --panel: #13201a;
+      --panel-2: #0e1713;
+      --ink: #eef6f1;
+      --muted: #8fa89b;
+      --accent: #2fd687;
+      --accent-dim: rgba(47, 214, 135, 0.14);
+      --warn: #f0b429;
+      --warn-dim: rgba(240, 180, 41, 0.14);
+      --danger: #ff7a7a;
+      --line: #24352d;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 0% -5%, #173528 0%, transparent 55%),
+        radial-gradient(700px 360px at 100% 0%, #1a2814 0%, transparent 45%),
+        var(--bg);
+    }
+    .wrap {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .brand h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.55rem, 2.4vw, 2rem);
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 54ch;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .status {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .dot.bad { background: var(--danger); box-shadow: 0 0 0 3px rgba(255,122,122,0.18); }
+
+    main {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, white), var(--panel));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .preset {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .preset:hover { border-color: var(--accent); color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 14px;
+    }
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    label span.hint {
+      font-weight: 400;
+      opacity: 0.75;
+      font-size: 0.72rem;
+    }
+    input {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--ink);
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus {
+      border-color: color-mix(in srgb, var(--accent) 70%, var(--line));
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .actions {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+    }
+    button#predict-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      background: linear-gradient(135deg, #3ee196, #1fba72);
+      color: #062015;
+    }
+    button#predict-btn:hover { filter: brightness(1.04); }
+    button#predict-btn:disabled { opacity: 0.6; cursor: wait; }
+
+    .result-stack { display: grid; gap: 16px; }
+    .eta-block {
+      padding: 18px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+    .eta-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .eta {
+      margin: 0;
+      font-size: clamp(2.4rem, 5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--warn);
+      line-height: 1.05;
+    }
+    .meta {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: 0.75rem;
+      color: var(--ink);
+      background: #101916;
+    }
+    .pill.ok { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); color: var(--accent); }
+    .pill.warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); color: var(--warn); background: var(--warn-dim); }
+
+    .breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .stat .k { color: var(--muted); font-size: 0.72rem; margin-bottom: 4px; }
+    .stat .v { font-family: "JetBrains Mono", monospace; font-size: 0.95rem; font-weight: 500; }
+
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid color-mix(in srgb, var(--warn) 40%, var(--line));
+      background: var(--warn-dim);
+      color: #ffe4a3;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    .alert.show { display: block; }
+    .error {
+      display: none;
+      margin-top: 4px;
+      color: var(--danger);
+      font-size: 0.88rem;
+    }
+    .error.show { display: block; }
+
+    .metrics-card h2 { margin-bottom: 12px; }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #c6d9ce;
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      max-height: 360px;
+      overflow: auto;
+    }
+    .footnote {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>Food Delivery ETA Predictor</h1>
+        <p>
+          Real-time XGBoost inference demo. Enter order features,
+          get ETA in minutes, and inspect live serving metrics.
+        </p>
+      </div>
+      <div class="status">
+        <div class="chip"><span class="dot" id="health-dot"></span><span id="health-text">Checking API…</span></div>
+        <div class="chip">Model: XGBoost production-v1</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-head">
+          <h2>Order features</h2>
+        </div>
+        <div class="presets">
+          <button type="button" class="preset" data-preset="typical">Typical dinner</button>
+          <button type="button" class="preset" data-preset="rain">Rainy lunch</button>
+          <button type="button" class="preset" data-preset="short">Short dry hop</button>
+        </div>
+        <form id="eta-form" class="grid">
+          <label>Distance (km)<span class="hint">training ~0.8–12</span>
+            <input name="distance_km" type="number" step="0.1" min="0.1" max="30" value="4.5" required />
+          </label>
+          <label>Prep time p50 (min)<span class="hint">training ~8–35</span>
+            <input name="prep_time_p50_min" type="number" step="0.1" min="1" max="90" value="18" required />
+          </label>
+          <label>Courier load<span class="hint">active orders on courier</span>
+            <input name="courier_load" type="number" step="1" min="0" max="10" value="1" required />
+          </label>
+          <label>Zone order rate<span class="hint">orders/hour in zone</span>
+            <input name="zone_order_rate" type="number" step="0.1" min="0" max="200" value="42" required />
+          </label>
+          <label>Hour of day<span class="hint">0–23</span>
+            <input name="hour_of_day" type="number" step="1" min="0" max="23" value="19" required />
+          </label>
+          <label>Day of week<span class="hint">0=Mon … 6=Sun</span>
+            <input name="day_of_week" type="number" step="1" min="0" max="6" value="5" required />
+          </label>
+          <label>Rain<span class="hint">0 = dry, 1 = rain</span>
+            <input name="is_rain" type="number" step="1" min="0" max="1" value="0" required />
+          </label>
+          <label>Traffic index<span class="hint">~0.4–1.8 typical</span>
+            <input name="traffic_index" type="number" step="0.1" min="0.1" max="3" value="1.3" required />
+          </label>
+          <label>Time since accept (min)<span class="hint">since restaurant accepted</span>
+            <input name="time_since_accept_min" type="number" step="0.1" min="0" max="60" value="3" required />
+          </label>
+        </form>
+        <div class="actions">
+          <button type="button" id="predict-btn">Predict ETA</button>
+          <div id="form-error" class="error"></div>
+        </div>
+      </section>
+
+      <div class="result-stack">
+        <section class="card">
+          <div class="card-head"><h2>Prediction</h2></div>
+          <div class="eta-block">
+            <p class="eta-label">Estimated delivery time</p>
+            <p class="eta" id="eta-value">— min</p>
+            <p class="meta" id="eta-meta">Choose a preset or edit features, then predict.</p>
+            <div class="pills" id="pills"></div>
+          </div>
+          <div class="breakdown" style="margin-top:14px">
+            <div class="stat">
+              <div class="k">Reference estimate</div>
+              <div class="v" id="ref-eta">—</div>
+            </div>
+            <div class="stat">
+              <div class="k">Model − reference</div>
+              <div class="v" id="delta-eta">—</div>
+            </div>
+          </div>
+          <div id="ood-alert" class="alert" style="margin-top:14px"></div>
+          <p class="footnote">
+            Reference estimate uses the same synthetic formula the training labels were built from
+            (prep + dispatch wait + travel + weekend). It is for demo sanity checks, not a second model.
+          </p>
+        </section>
+
+        <section class="card metrics-card">
+          <div class="card-head"><h2>Live /stats</h2></div>
+          <pre id="metrics-box">Loading…</pre>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById("eta-form");
+    const btn = document.getElementById("predict-btn");
+    const etaValue = document.getElementById("eta-value");
+    const etaMeta = document.getElementById("eta-meta");
+    const pills = document.getElementById("pills");
+    const err = document.getElementById("form-error");
+    const metricsBox = document.getElementById("metrics-box");
+    const oodAlert = document.getElementById("ood-alert");
+    const refEta = document.getElementById("ref-eta");
+    const deltaEta = document.getElementById("delta-eta");
+    const healthDot = document.getElementById("health-dot");
+    const healthText = document.getElementById("health-text");
+
+    const PRESETS = {
+      typical: {
+        distance_km: 4.5, prep_time_p50_min: 18, courier_load: 1, zone_order_rate: 42,
+        hour_of_day: 19, day_of_week: 5, is_rain: 0, traffic_index: 1.3, time_since_accept_min: 3
+      },
+      rain: {
+        distance_km: 3.2, prep_time_p50_min: 16, courier_load: 2, zone_order_rate: 55,
+        hour_of_day: 13, day_of_week: 2, is_rain: 1, traffic_index: 1.5, time_since_accept_min: 4
+      },
+      short: {
+        distance_km: 1.8, prep_time_p50_min: 12, courier_load: 0, zone_order_rate: 20,
+        hour_of_day: 11, day_of_week: 1, is_rain: 0, traffic_index: 0.7, time_since_accept_min: 1
+      }
+    };
+
+    const TRAIN_RANGES = {
+      distance_km: [0.8, 12],
+      prep_time_p50_min: [8, 35],
+      courier_load: [0, 3],
+      zone_order_rate: [5, 80],
+      hour_of_day: [8, 22],
+      day_of_week: [0, 6],
+      is_rain: [0, 1],
+      traffic_index: [0.4, 1.8],
+      time_since_accept_min: [0, 12]
+    };
+
+    function payloadFromForm() {
+      const data = Object.fromEntries(new FormData(form).entries());
+      const out = {};
+      for (const [k, v] of Object.entries(data)) out[k] = Number(v);
+      return out;
+    }
+
+    function applyPreset(name) {
+      const p = PRESETS[name];
+      if (!p) return;
+      for (const [k, v] of Object.entries(p)) {
+        const input = form.elements.namedItem(k);
+        if (input) input.value = v;
+      }
+    }
+
+    function oodWarnings(payload) {
+      const issues = [];
+      for (const [k, [lo, hi]] of Object.entries(TRAIN_RANGES)) {
+        const v = payload[k];
+        if (v < lo || v > hi) issues.push(`${k}=${v} outside training ~[${lo}, ${hi}]`);
+      }
+      return issues;
+    }
+
+    function referenceEstimate(p) {
+      const peak = ((p.hour_of_day >= 12 && p.hour_of_day <= 14) || (p.hour_of_day >= 19 && p.hour_of_day <= 21)) ? 1 : 0;
+      const travel = p.distance_km * (3.8 + 1.6 * p.traffic_index) * (1 + 0.18 * p.is_rain);
+      const dispatch = 2.5 + 1.8 * p.courier_load + 0.04 * p.zone_order_rate + 1.5 * peak;
+      const prep = p.prep_time_p50_min * (1 + 0.12 * p.is_rain) + 0.15 * p.time_since_accept_min;
+      const weekend = p.day_of_week >= 5 ? 1.2 : 0;
+      return {
+        total: prep + dispatch + travel + weekend,
+        parts: { prep, dispatch, travel, weekend }
+      };
+    }
+
+    async function refreshHealth() {
+      try {
+        const res = await fetch("/health");
+        const json = await res.json();
+        const ok = json.model_loaded;
+        healthDot.classList.toggle("bad", !ok);
+        healthText.textContent = ok ? "API healthy · model loaded" : "API up · model missing";
+      } catch {
+        healthDot.classList.add("bad");
+        healthText.textContent = "API unreachable";
+      }
+    }
+
+    async function refreshMetrics() {
+      try {
+        const res = await fetch("/stats");
+        const json = await res.json();
+        const slim = {
+          requests_served: json.requests_served,
+          latency_ms_p95: json.latency_ms_p95,
+          latency_ms_mean: json.latency_ms_mean,
+          selected_production_model: json.training?.selected_production_model,
+          models: json.training?.models,
+          prometheus: "/metrics",
+          grafana: "http://localhost:3000"
+        };
+        metricsBox.textContent = JSON.stringify(slim, null, 2);
+      } catch {
+        metricsBox.textContent = "Could not load /stats";
+      }
+    }
+
+    document.querySelectorAll(".preset").forEach((el) => {
+      el.addEventListener("click", () => applyPreset(el.dataset.preset));
+    });
+
+    btn.addEventListener("click", async () => {
+      err.classList.remove("show");
+      err.textContent = "";
+      btn.disabled = true;
+      try {
+        const payload = payloadFromForm();
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const ref = referenceEstimate(payload);
+        const delta = data.eta_minutes - ref.total;
+
+        etaValue.textContent = `${data.eta_minutes.toFixed(2)} min`;
+        etaMeta.textContent = `Model ${data.model_name} (${data.model_version}) · inference ${data.latency_ms} ms`;
+        refEta.textContent = `${ref.total.toFixed(2)} min`;
+        deltaEta.textContent = `${delta >= 0 ? "+" : ""}${delta.toFixed(2)} min`;
+
+        pills.innerHTML = `
+          <span class="pill ${data.fallback ? "warn" : "ok"}">fallback: ${data.fallback}</span>
+          <span class="pill">API latency: ${data.latency_ms} ms</span>
+          <span class="pill">travel≈${ref.parts.travel.toFixed(1)} · prep≈${ref.parts.prep.toFixed(1)} · wait≈${ref.parts.dispatch.toFixed(1)}</span>
+        `;
+
+        const issues = oodWarnings(payload);
+        if (issues.length) {
+          oodAlert.classList.add("show");
+          oodAlert.textContent = "Out-of-distribution inputs can make predictions less reliable: " + issues.join("; ") + ".";
+        } else {
+          oodAlert.classList.remove("show");
+          oodAlert.textContent = "";
+        }
+
+        await refreshMetrics();
+      } catch (e) {
+        err.classList.add("show");
+        err.textContent = e.message || String(e);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    refreshHealth();
+    refreshMetrics();
+  </script>
+</body>
+</html>

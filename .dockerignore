@@ -1,0 +1,12 @@
+.venv
+__pycache__
+*.pyc
+.git
+.gitignore
+assets
+docs
+diagrams
+outputs/screenshots
+data
+*.md
+.DS_Store
