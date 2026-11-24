@@ -43,15 +43,13 @@
 
 ## 1. Problem Statement
 
-The official assignment brief for this project is as follows:
-
-![Problem Statement — P2 ML System Design](assets/problem-statement.png)
-
 **P2. ML System Design for a Real-World Product**
 
-- **Scenario:** Design the ML system for a food-delivery ETA predictor.  
-- **Task:** Define requirements (latency, throughput, accuracy), data sources, a brief data warehouse layer, training pipeline, serving approach (real-time vs batch), and monitoring. Show a microservices, containers and cloud architecture.  
-- **Deliverable:** Architecture diagram plus a design document of 2–3 pages with trade-off justifications.
+**Scenario:** Design the ML system for a food-delivery ETA predictor.
+
+**Task:** Define requirements (latency, throughput, accuracy), data sources, a brief data warehouse layer, training pipeline, serving approach (real-time vs batch), and monitoring. Show a microservices, containers and cloud architecture.
+
+**Deliverable:** Architecture diagram plus a design document of 2–3 pages with trade-off justifications.
 
 This report expands that deliverable into a complete MLOps project: theory, architecture, working implementation (training + FastAPI serving), Docker Compose with Prometheus/Grafana, measured results, screenshots, and code.
 
