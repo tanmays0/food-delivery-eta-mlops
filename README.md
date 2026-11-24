@@ -28,7 +28,6 @@ cd food-delivery-eta-mlops
 
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-# macOS: brew install libomp
 python src/generate_data.py && python src/train.py
 
 docker compose up -d --build
